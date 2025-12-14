@@ -1,0 +1,4 @@
+(fp_lib_table
+  (version 7)
+  (lib (name "bdkb")(type "KiCad")(uri "${KIPRJMOD}/libraries/bdkb.pretty")(options "")(descr ""))
+)
