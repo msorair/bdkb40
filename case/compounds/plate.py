@@ -8,14 +8,13 @@ from typing import Any, Callable, Iterable
 
 from build123d import *
 from ocp_vscode import *
-from stabilizer import KadStabilizerScheme, StabilizerScheme
+from .stabilizer import KadStabilizerScheme, StabilizerScheme
+from enum import IntEnum
 
-kle_data = r'''
-["esc","q","w","e","r","t","y","u","i","o","p","BS"],
-[{w:1.25},"Caps","a","s","d","f","g","h","j","k","l",{w:1.75},"\\"],
-[{w:1.75},"Shift","z","x","c","v","b","n","m",",",".",{w:1.25},"Shift"],
-[{w:1.25},"Ctrl","Super",{w:1.25},"Alt",{w:2.25},"",{w:2.75},"",{w:1.25},"Fn","Super",{w:1.25},"Ctrl"]
-'''
+
+class PlateType(IntEnum):
+	DEFALT = 0
+	GASKET = 1
 
 
 @dataclass(frozen=True)
@@ -188,10 +187,11 @@ def build_plate_from_kle(
 	switch_cutout_mm: float = 14.0,
 	switch_cutout_corner_radius_mm: float = 0.5,
 	stabilizer: StabilizerScheme | None = None,
+	plate_type: PlateType = PlateType.DEFALT,
 ) -> Solid:
 	keys = parse_kle(kle, unit_mm=unit_mm)
 	min_x, min_y, max_x, max_y = _keys_bounds_mm(keys)
-
+	print(f"Keys bounds mm: x[{min_x}, {max_x}], y[{min_y}, {max_y}]")
 	plate_w = (max_x - min_x) + 2.0 * margin_mm
 	plate_h = (max_y - min_y) + 2.0 * margin_mm
 	plate_cx = (min_x + max_x) / 2.0
@@ -231,30 +231,43 @@ def build_plate_from_kle(
 	if holes_sk is not None:
 		cutouts = extrude(Plane.XY * holes_sk, thickness_mm)
 		plate -= cutouts
+	
+	edges = plate.edges().group_by(Axis.Z)[1]
+	edges = edges.group_by(Axis.Y)[0] + edges.group_by(Axis.Y)[-1]
+	plate = fillet(edges, 1)
 
-	# Recenter plate solid to origin
-	plate = Location((-plate_cx, -plate_cy, 0)) * plate
+
+	if plate_type == PlateType.GASKET:
+		# mounting_sk_t = Rectangle(6, 6) + Circle(2.7)
+		t = [
+			(-7, -3),
+			(-8, -2),
+			(-8, 3),
+			(-28, 3),
+			(-28, 0.4),
+			(-18, 0.4),
+			(-18, -2),
+			(-19, -3),
+			(-7, -3),
+		]
+		mounting_sk_tc = Rectangle(6, 6) - Circle(2.7 / 2) + \
+		                 Polygon([(-3, -3), (-3, -2), (-4, -3), (-3, -3)], align=Align.NONE) + \
+						 Polygon([(3, -3), (4, -3), (3, -2), (3, -3)], align=Align.NONE)
+		mounting_sk_tl = Polygon(t, align=Align.NONE)
+		mounting_sk_tr = mirror(mounting_sk_tl, Plane.YZ)
+		pos_list = [
+			Pos(0, plate_h/2 + 3),
+			Pos(plate_w/2 - 28 - 10, plate_h/2 + 3),
+			Pos(-(plate_w/2 - 28 - 10), plate_h/2 + 3),
+		]
+		mounting_sk = Sketch()
+		for pos in pos_list:
+			mounting_sk += pos * mounting_sk_tc + pos * mounting_sk_tl + \
+							pos * mounting_sk_tr
+		mounting_sk += mirror(mounting_sk, Plane.XZ)
+		mounting_cutouts = extrude(Plane.XY * mounting_sk, thickness_mm)
+		edges = mounting_cutouts.edges().group_by(Axis.Z)[1]
+		edges = edges.group_by(Axis.Y)[:2] + edges.group_by(Axis.Y)[-2:]
+		mounting_cutouts = fillet(edges, 1)
+		plate += mounting_cutouts
 	return plate
-
-
-
-if __name__ == "__main__":
-	d = 19.05
-	margin = 3.0
-	thickness = 1.5
-	switch_cutout_mm = 14.0
-	switch_cutout_corner_radius_mm = 0.5
-
-	kad_stabilizer = KadStabilizerScheme()
-	plate = build_plate_from_kle(
-		kle_data,
-		unit_mm=d,
-		margin_mm=margin,
-		thickness_mm=thickness,
-		switch_cutout_mm=switch_cutout_mm,
-		switch_cutout_corner_radius_mm=switch_cutout_corner_radius_mm,
-		stabilizer=kad_stabilizer,
-	)
-	show(plate, alphas=[0.3])
-	# save to STL
-	export_stl(plate, "keyboard_plate.stl")
