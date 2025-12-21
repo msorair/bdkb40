@@ -1,0 +1,11 @@
+[project]
+name = "key40-build123d"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "bd-warehouse>=0.1.1",
+    "build123d>=0.10.0",
+    "partcad-cli>=0.6.34",
+]
