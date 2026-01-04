@@ -10,11 +10,12 @@ from build123d import *
 from ocp_vscode import *
 from .stabilizer import KadStabilizerScheme, StabilizerScheme
 from enum import IntEnum
-
+import typing
 
 class PlateType(IntEnum):
 	DEFALT = 0
 	GASKET = 1
+	TOP_MOUNT = 2
 
 
 @dataclass(frozen=True)
@@ -22,6 +23,19 @@ class KleKey:
 	center_mm: tuple[float, float]
 	size_mm: tuple[float, float]
 	angle_deg: float
+
+@dataclass
+class PlateParameters:
+	unit_mm: float = 19.05
+	margin_mm: float = 3.0
+	thickness_mm: float = 1.5
+	switch_cutout_mm: float = 14.0
+	switch_cutout_corner_radius_mm: float = 0.5
+	stabilizer: StabilizerScheme | None = None
+	plate_type: PlateType = PlateType.DEFALT
+	width_mm: float = 0.0
+	length_mm: float = 0.0
+	height_mm: float = 0.0
 
 
 def _kle_to_json_str(kle: str) -> str:
@@ -188,7 +202,7 @@ def build_plate_from_kle(
 	switch_cutout_corner_radius_mm: float = 0.5,
 	stabilizer: StabilizerScheme | None = None,
 	plate_type: PlateType = PlateType.DEFALT,
-) -> Solid:
+) -> typing.Tuple[Solid, PlateParameters]:
 	keys = parse_kle(kle, unit_mm=unit_mm)
 	min_x, min_y, max_x, max_y = _keys_bounds_mm(keys)
 	print(f"Keys bounds mm: x[{min_x}, {max_x}], y[{min_y}, {max_y}]")
@@ -197,11 +211,11 @@ def build_plate_from_kle(
 	plate_cx = (min_x + max_x) / 2.0
 	plate_cy = (min_y + max_y) / 2.0
 
-	# Base plate (algebra mode)
+	# Base plate
 	plate_sk = Rectangle(plate_w, plate_h)
 	plate = extrude(plate_sk, amount=thickness_mm)
 
-	# Switch cutouts as a single sketch (algebra mode)
+	# Switch cutouts as a single sketch
 	holes_sk: Sketch | None = None
 	for k in keys:
 		cx, cy = k.center_mm
@@ -234,11 +248,11 @@ def build_plate_from_kle(
 	
 	edges = plate.edges().group_by(Axis.Z)[1]
 	edges = edges.group_by(Axis.Y)[0] + edges.group_by(Axis.Y)[-1]
-	plate = fillet(edges, 1)
 
 
 	if plate_type == PlateType.GASKET:
 		# mounting_sk_t = Rectangle(6, 6) + Circle(2.7)
+		mounting_width = 6
 		t = [
 			(-7, -3),
 			(-8, -2),
@@ -270,4 +284,18 @@ def build_plate_from_kle(
 		edges = edges.group_by(Axis.Y)[:2] + edges.group_by(Axis.Y)[-2:]
 		mounting_cutouts = fillet(edges, 1)
 		plate += mounting_cutouts
-	return plate
+		plate = fillet(edges, 1)
+	
+	plate_parameters = PlateParameters(
+		unit_mm=unit_mm,
+		margin_mm=margin_mm,
+		thickness_mm=thickness_mm,
+		switch_cutout_mm=switch_cutout_mm,
+		switch_cutout_corner_radius_mm=switch_cutout_corner_radius_mm,
+		stabilizer=stabilizer,
+		plate_type=plate_type,
+		width_mm=plate_w,
+		length_mm=plate_h,
+		height_mm=thickness_mm,
+	)
+	return plate, plate_parameters
