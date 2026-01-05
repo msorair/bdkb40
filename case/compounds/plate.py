@@ -6,8 +6,8 @@ import re
 from dataclasses import dataclass
 from typing import Any, Callable, Iterable
 
-from build123d import *
-from ocp_vscode import *
+from build123d import BuildPart, Box, Cylinder, BuildSketch, Rectangle, Circle, extrude, Mode, Line, BuildLine, Builder, ThreePointArc, PointArcTangentLine, make_face, make_hull, Location, Pos, Rot, Locations, RegularPolygon, Plane, Polyline, Polygon, mirror, chamfer, fillet, Part, Hole, GridLocations, Spline, CounterBoreHole, CounterSinkHole, PolarLocations, PolarLine, Plane, JernArc, Curve, split, revolve, loft, offset, Sphere, Bezier, add, Text, SlotArc, RadiusArc, SlotOverall, RigidJoint, LinearJoint, BallJoint, RevoluteJoint, CylindricalJoint, Axis, Vector, Edge, Face, Wire, Shell, Solid, Compound, Union, Color, Sketch, sweep, Align, Kind, SlotCenterToCenter, Until, SlotOverall, MM, RectangleRounded
+from ocp_vscode import show_all, show_object, show
 from .stabilizer import KadStabilizerScheme, StabilizerScheme
 from enum import IntEnum
 import typing
@@ -246,10 +246,6 @@ def build_plate_from_kle(
 		cutouts = extrude(Plane.XY * holes_sk, thickness_mm)
 		plate -= cutouts
 	
-	edges = plate.edges().group_by(Axis.Z)[1]
-	edges = edges.group_by(Axis.Y)[0] + edges.group_by(Axis.Y)[-1]
-
-
 	if plate_type == PlateType.GASKET:
 		# mounting_sk_t = Rectangle(6, 6) + Circle(2.7)
 		mounting_width = 6
@@ -279,7 +275,7 @@ def build_plate_from_kle(
 			mounting_sk += pos * mounting_sk_tc + pos * mounting_sk_tl + \
 							pos * mounting_sk_tr
 		mounting_sk += mirror(mounting_sk, Plane.XZ)
-		mounting_cutouts = extrude(Plane.XY * mounting_sk, thickness_mm)
+		mounting_cutouts = extrude(mounting_sk, thickness_mm)
 		edges = mounting_cutouts.edges().group_by(Axis.Z)[1]
 		edges = edges.group_by(Axis.Y)[:2] + edges.group_by(Axis.Y)[-2:]
 		mounting_cutouts = fillet(edges, 1)
