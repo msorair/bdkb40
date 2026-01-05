@@ -5,8 +5,8 @@ import math
 import re
 from dataclasses import dataclass
 
-from build123d import *
-from ocp_vscode import *
+from build123d import BuildPart, Box, Cylinder, BuildSketch, Rectangle, Circle, extrude, Mode, Line, BuildLine, Builder, ThreePointArc, PointArcTangentLine, make_face, make_hull, Location, Pos, Rot, Locations, RegularPolygon, Plane, Polyline, Polygon, mirror, chamfer, fillet, Part, Hole, GridLocations, Spline, CounterBoreHole, CounterSinkHole, RectangleRounded, PolarLine, Plane, JernArc, Curve, split, revolve, loft, offset, Sphere, Bezier, add, Text, SlotArc, RadiusArc, SlotOverall, RigidJoint, LinearJoint, BallJoint, RevoluteJoint, CylindricalJoint, Axis, Vector, Edge, Face, Wire, Shell, Solid, Compound, Union, Color, Sketch, sweep, Align, Kind, SlotCenterToCenter, Until, SlotOverall, MM
+from ocp_vscode import show_all, show_object, show
 from enum import IntEnum
 import typing
 
@@ -39,25 +39,33 @@ def make_top_mount(params: TopMountParams):
     """
     top_h = 7.15 # 定位板到顶面的高度
     # 外形尺寸（x, y）
-    outer_x = params.plate_width + 2 * params.wall_thickness + 2 * params.plate_margin
-    outer_y = params.plate_length + 2 * params.wall_thickness + 2 * params.plate_margin 
+    outer_x = params.plate_width + 2 * params.wall_thickness
+    outer_y = params.plate_length + 2 * params.wall_thickness + 6
+
+    inner_x = params.plate_width
+    inner_y = params.plate_length
 
     h = params.height
 
-    outer = extrude(Plane.XY * Rectangle(outer_x, outer_y), amount=h)
-    inner = extrude(Plane.XY * Rectangle(params.plate_width, params.plate_length), amount=h)
+    outer = extrude(Plane.XY * RectangleRounded(outer_x, outer_y, 3), amount=h)
+    inner = extrude(Plane.XY * RectangleRounded(inner_x, inner_y, 1), amount=h)
 
-
-    top_sk = Rectangle(params.plate_width, params.plate_length).located(Location(Vector(0, 0, h))) - Rectangle(params.plate_width - params.plate_margin,  params.plate_length - params.plate_margin).located(Location(Vector(0, 0, h)))
-    top_ex = extrude(Plane.XY * top_sk, amount=-params.wall_thickness)
+    top_sk1 = Rectangle(inner_x, inner_y+1).located(Location(Vector(0, 0, h))) - RectangleRounded(params.plate_width - params.plate_margin,  params.plate_length - params.plate_margin, 1).located(Location(Vector(0, 0, h)))
+    top_ex1 = extrude(Plane.XY * top_sk1, amount=-params.wall_thickness)
+    top_ex1_face = top_ex1.faces().group_by(Axis.Z)[-1]
+    top_innet_edges = top_ex1_face.edges().group_by(Axis.X)[1:-1]
+    top_ex1 = fillet(top_innet_edges, 0.5)
 
     # 在 距离顶面 top_h 处放置定位板
-    top_mount = outer - inner + top_ex
+    top_mount = outer - inner + top_ex1
     if params.plate is not None:
-        # plate_edge = top_mount.edges().filter_by(Axis.Z).sort_by(Axis.X)[0]
     
         plate_loc = Location(Vector(0, 0, h - top_h))
         top_mount += plate_loc * params.plate
+
+    top_face = top_mount.faces().group_by(Axis.Z)[-1]
+    top_edges_y0 = top_face.edges().group_by(Axis.Y)[0] + top_face.edges().group_by(Axis.Y)[-1]
+    top_mount = fillet(top_edges_y0, 2.5)
     return top_mount
 
 
