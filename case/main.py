@@ -39,7 +39,7 @@ if __name__ == "__main__":
 		stabilizer=kad_stabilizer,
 		plate_type=PlateType.TOP_MOUNT
 	)
-	# print("Plate parameters:", plate_parameters)
+	print("Plate parameters:", plate_parameters)
 	# show(plate, alphas=[0.3])
 	# save to STL
 	# export_stl(plate, "keyboard_plate.stl")
@@ -49,5 +49,5 @@ if __name__ == "__main__":
 	top_mount = make_top_mount(top_mount_params)
 	print("Top mount created with outer size:", top_mount_params.plate_length + 2 * top_mount_params.wall_thickness + 2 * top_mount_params.plate_margin,
 			top_mount_params.plate_width + 2 * top_mount_params.wall_thickness + 2 * top_mount_params.plate_margin)
-	show(top_mount, alphas=[1])
+	show_all(alphas=[0.3, 0.5])
 	
