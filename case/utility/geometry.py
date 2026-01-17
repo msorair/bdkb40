@@ -1,6 +1,6 @@
 import numpy as np
 
-def make_polygon_cw(polygon, epsilon=1e-10):
+def make_polygon_cw(polygon: np.ndarray, epsilon: float = 1e-10) -> np.ndarray:
     polygon = np.asarray(polygon, dtype=np.float64)
     if polygon.shape[0] < 3 or polygon.ndim != 2:
         return polygon
@@ -11,7 +11,7 @@ def make_polygon_cw(polygon, epsilon=1e-10):
         return polygon
     return polygon[::-1].copy() if signed_area > 0 else polygon.copy()
 
-def make_polygon_ccw(polygon, epsilon=1e-10):
+def make_polygon_ccw(polygon: np.ndarray, epsilon: float = 1e-10) -> np.ndarray:
     polygon = np.asarray(polygon, dtype=np.float64)
     if polygon.shape[0] < 3 or polygon.ndim != 2:
         return polygon

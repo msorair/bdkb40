@@ -1,15 +1,11 @@
 from __future__ import annotations
 
-import json
-import math
 import numpy as np
-import re
 from dataclasses import dataclass
-from typing import Any, Callable, Iterable
 
-from build123d import Polygon, Locations, Location, Align, Shape
-from ocp_vscode import *
+from build123d import Polygon, Location, Align, Sketch
 from utility.geometry import make_polygon_ccw
+import typing
 
 @dataclass(frozen=True)
 class StabilizerScheme:
@@ -38,7 +34,7 @@ class StabilizerScheme:
 				return spacing
 		return None
 	
-	def draw_cutout(self, u, x, y) -> Shape:
+	def draw_cutout(self, u: float, x: float, y: float) -> Sketch:
 		"""Draw a single stabilizer cutout at the origin (inside a BuildSketch)."""
 		raise NotImplementedError("draw_cutout must be implemented by subclasses.")
 
@@ -69,7 +65,7 @@ class KadStabilizerScheme(StabilizerScheme):
 		j = 6.750
 		k = 3.230
 
-		pts_t = [
+		pts_t: list[list[float]] = [
 			[0, y0],
 			[-a, y0],
 			[-a, y0 - b],
@@ -92,7 +88,7 @@ class KadStabilizerScheme(StabilizerScheme):
 			min_u_exclusive=2.0,
 		)
 
-	def draw_cutout(self, u, x, y) -> Shape:
+	def draw_cutout(self, u: float, x: float, y: float) -> Sketch:
 		lpts = np.array(self.template) - np.array([self.w / 2, 0])
 		lpts = make_polygon_ccw(lpts)
 		left_cutout = Polygon([tuple(pt) for pt in lpts.tolist()], align=Align.NONE)
@@ -101,5 +97,5 @@ class KadStabilizerScheme(StabilizerScheme):
 		rpts = make_polygon_ccw(rpts)
 		right_cutout = Polygon([tuple(pt) for pt in rpts.tolist()], align=Align.NONE)
 		# print(right_cutout.bounding_box())
-		return Location((x, y, 0)) * left_cutout + Location((x, y, 0)) * right_cutout
+		return typing.cast(Sketch, Location((x, y, 0)) * left_cutout + Location((x, y, 0)) * right_cutout)
 		
