@@ -12623,7 +12623,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "PCM_marbastlib-various:SW_T1A2QR"
+		(property "Footprint" "Button_Switch_SMD:SW_SPST_TS-1088-xR025"
 			(at 106.68 -162.56 0)
 			(effects
 				(font
@@ -12649,7 +12649,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C100056"
+		(property "LCSC" "C720477"
 			(at 101.6 -162.56 0)
 			(effects
 				(font
@@ -15387,7 +15387,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "PCM_marbastlib-various:SW_T1A2QR"
+		(property "Footprint" "Button_Switch_SMD:SW_SPST_TS-1088-xR025"
 			(at 85.09 -162.56 0)
 			(effects
 				(font
@@ -15413,7 +15413,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C100056"
+		(property "LCSC" "C720477"
 			(at 80.01 -162.56 0)
 			(effects
 				(font
@@ -16840,7 +16840,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "PCM_marbastlib-various:SW_T1A2QR"
+		(property "Footprint" "Button_Switch_SMD:SW_SPST_TS-1088-xR025"
 			(at 96.52 -162.56 0)
 			(effects
 				(font
@@ -16866,7 +16866,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C100056"
+		(property "LCSC" "C720477"
 			(at 91.44 -162.56 0)
 			(effects
 				(font
@@ -19010,7 +19010,7 @@
 				)
 			)
 		)
-		(property "Value" "SW_SP3T"
+		(property "Value" "SW_SP3T_TA3517A1"
 			(at 59.69 -144.78 0)
 			(effects
 				(font
@@ -19038,6 +19038,15 @@
 		)
 		(property "Description" "Switch, three position, single pole triple throw, 3 position switch, SP3T"
 			(at 59.69 -139.7 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC" "C514001"
+			(at 59.69 -147.32 0)
 			(effects
 				(font
 					(size 1.27 1.27)
